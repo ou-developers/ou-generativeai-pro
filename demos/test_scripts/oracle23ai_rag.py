@@ -29,7 +29,7 @@ def chunks_to_docs_wrapper(row: dict) -> Document:
     Converts text into a Document object suitable for ingestion into Oracle Vector Store.
     - row (dict): A dictionary representing a row of data with keys for 'id', 'link', and 'text'.
     """
-    metadata = {'id': row['id'], 'link': row['link']}
+    metadata = {'id': str(row['id']), 'link': row['link']}
     print(metadata)
     return Document(page_content=row['text'], metadata=metadata)
 print("Successfully defined metadata wrapper")
