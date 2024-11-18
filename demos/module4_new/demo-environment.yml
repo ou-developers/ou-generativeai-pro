@@ -1,5 +1,6 @@
 name: demo-11
 channels:
+  - conda-forge
   - defaults
 dependencies:
   - bzip2=1.0.8=h6c40b1e_6
