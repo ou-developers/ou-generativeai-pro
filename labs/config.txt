@@ -1,4 +1,4 @@
-{"model_name":"cohere.command-r-16k",
+{"model_name":"cohere.command-r-08-2024",
 "embedding_model_name":"cohere.embed-english-v3.0",
 "endpoint":"https://inference.generativeai.eu-frankfurt-1.oci.oraclecloud.com",
 "compartment_ocid":"<ocid1.compartment.oc1..xxxxxxxxx……>"
