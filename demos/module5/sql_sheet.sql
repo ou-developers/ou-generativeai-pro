@@ -19,11 +19,11 @@ begin
 -- If you need to install it (for example on Base Database) you can refer to: https://support.oracle.com/knowledge/Oracle%20Cloud/2748362_1.html
 begin
      DBMS_CLOUD.CREATE_CREDENTIAL (
-         credential_name => 'OCI_CRED_BUCKET',
-         user_ocid       => 'ocid1.user.oc1..aaaaaaaa3vspheideczn3n5tkqdcrajftuvfnohzwke6dhfweb57lmynj7va',
-         tenancy_ocid    => 'ocid1.tenancy.oc1..aaaaaaaaxy6bh46cdnlfpaibasc6dotowv32hc2sbj4ph3ocxtfxhhva2hna',
-         private_key     => 'MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDXbAGkrlr+LpJc009ntZyeSUm5HV591Uo/2eoqE4dR//bfqI8iNypgRAXxWY5YsyULIGMkkrYoS1AUVeVMrkvr1GwMRqLUZY826XHUB0HxQuphFEfSHJWe8ELOna+SWRdXNqYxUm7wl61YbhZfioluzhdRXZnS9d/NAVaW2pnnnenU45Pa0lF5KP+fbpYw3CJpiGF4ntv0CsFZUqIFQOfJoSVYks4xsURGV4+erm4WezzBPzaezl08MswJlqQOH7PGfzbn068ZfG5O1fvZvcpQM/lVByAMdr+Z1OROh2oIXzQVRQksyq2UpeEkzFhhpJ39UlBiU2lkI2tx8hcwIDjlAgMBAAECgf9FAFOGbFK5GDHJieXlUkbYbKEwqjeaFrexvBtFXvv5SAPLoDI4w3LPYvqEVCtEPh2fcsBO9q9iOL1txhWseifXYjM5u2Zsohs9e4j6YVi97rEkZ1qZ8o36WvsLM3cJaYAQb3DMW5stdWgQ6zI/aCCdXWYaqeCbsiX9hHA34c1qYpQIQQbzcTjmQjptnd2480lf3TCOCN1b/UIWfNdG7sVX6g8ybzYlVYNsIXo/GL5KEsvVoLfEP55bLl2g/A6NpsoGYRQUZ8zNtjnob4hxtbUQfGLU8p6lz8O86pYQUq+8BcMETyDvlROkTXx7EJc69W6IkjyWqUDhif4OGMCyAsECgYEA8FAIR8s/g7ivTsh8WBnU9AV/rHMCrpiPPJo9ESn6kcy+emnomBTlZPUeTkjHalEsFzsEc7vQ0Ucyphi5ukx2xSSUN6/5qi7WqMcHdP/gCt1LBGMAH1jNRachwNsUkdDXdKWDZLnePw8r6j80a0wXfqV99ljtylBl41IkY+rUyV0CgYEA5XwDsnICpzi62mcKTKQWwzr6dUZ4hqn8tnTzcl8aepbYC12DePvfqwEp9TsiXRosibbbYN/5OOYEI2mGes8O4yei3pDgo3vIBSgU9H6SWSEi3hmSFLJQxkf9DajOKTVRIBge2MHf55Pm1TtJp3rcOeduC306aE+0j6Kltwq3TSkCgYEAhKAWwdCpIAAoODmrbk/rWDVErh7XJxapTo/tDfD2CctOgG684Fn/9ATXkerWq5Va2QNIRLst1qINkN9qeSfEEK9MYaNsDYFGFOWq9uZUdoqE4UnmAmbW+w7vMOl347W3gvfpmQh/YJv155S0UFcxTEL3TqLrsVFHufpWfRJYFz0CgYA83zB73RInGT03Qa3RtpTzJGnbQd4mmmCWZV9OLzvu2KRmH2AIb4dc7OocSptK5u55eS+n+sE4/oqKeitZ2CKyzoi9UODFfMgJ1h/42ronOkrtbwr4wnP6pI3TWbuV4raqNLu583NZEjpgxWE8M7LHCUR/d7BOixXyI8qhSw5kQQKBgQCM701VZuUe1BuZJenHcg0JfwUJA4GNctZHT0h2us0dWDp5j+1dzWJWICiEGaihutyMxZd14x/PXWYXW68MPFgZt/XP49HqSW918IEZNiBaOiFohIuDJiAyql3NqOu/cEvDf5y7xp+hPqZsBrbwyEDf8U9PQBTe8nVABAURPmSGpg==',
-         fingerprint     => '36:a3:17:e5:79:da:32:35:b5:c9:d4:b5:08:cc:88:1f'
+         credential_name => '**********',
+         user_ocid       => '**********',
+         tenancy_ocid    => '**********',
+         private_key     => '**********',
+         fingerprint     => '**********'
      );
  end;
  /
@@ -33,11 +33,11 @@ declare
      jo json_object_t;
 begin
      jo := json_object_t();
-     jo.put('user_ocid','ocid1.user.oc1..aaaaaaaa3vspheideczn3n5tkqdcrajftuvfnohzwke6dhfweb57lmynj7va');
-     jo.put('tenancy_ocid','ocid1.tenancy.oc1..aaaaaaaaxy6bh46cdnlfpaibasc6dotowv32hc2sbj4ph3ocxtfxhhva2hna');
-     jo.put('compartment_ocid','ocid1.compartment.oc1..aaaaaaaa7ppatdkvw4tgc5gj4gdkacgobf63bd4iysmhshfksqhgr5v55d5q');
-     jo.put('private_key','MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDXbAGkrlr+LpJc009ntZyeSUm5HV591Uo/2eoqE4dR//bfqI8iNypgRAXxWY5YsyULIGMkkrYoS1AUVeVMrkvr1GwMRqLUZY826XHUB0HxQuphFEfSHJWe8ELOna+SWRdXNqYxUm7wl61YbhZfioluzhdRXZnS9d/NAVaW2pnnnenU45Pa0lF5KP+fbpYw3CJpiGF4ntv0CsFZUqIFQOfJoSVYks4xsURGV4+erm4WezzBPzaezl08MswJlqQOH7PGfzbn068ZfG5O1fvZvcpQM/lVByAMdr+Z1OROh2oIXzQVRQksyq2UpeEkzFhhpJ39UlBiU2lkI2tx8hcwIDjlAgMBAAECgf9FAFOGbFK5GDHJieXlUkbYbKEwqjeaFrexvBtFXvv5SAPLoDI4w3LPYvqEVCtEPh2fcsBO9q9iOL1txhWseifXYjM5u2Zsohs9e4j6YVi97rEkZ1qZ8o36WvsLM3cJaYAQb3DMW5stdWgQ6zI/aCCdXWYaqeCbsiX9hHA34c1qYpQIQQbzcTjmQjptnd2480lf3TCOCN1b/UIWfNdG7sVX6g8ybzYlVYNsIXo/GL5KEsvVoLfEP55bLl2g/A6NpsoGYRQUZ8zNtjnob4hxtbUQfGLU8p6lz8O86pYQUq+8BcMETyDvlROkTXx7EJc69W6IkjyWqUDhif4OGMCyAsECgYEA8FAIR8s/g7ivTsh8WBnU9AV/rHMCrpiPPJo9ESn6kcy+emnomBTlZPUeTkjHalEsFzsEc7vQ0Ucyphi5ukx2xSSUN6/5qi7WqMcHdP/gCt1LBGMAH1jNRachwNsUkdDXdKWDZLnePw8r6j80a0wXfqV99ljtylBl41IkY+rUyV0CgYEA5XwDsnICpzi62mcKTKQWwzr6dUZ4hqn8tnTzcl8aepbYC12DePvfqwEp9TsiXRosibbbYN/5OOYEI2mGes8O4yei3pDgo3vIBSgU9H6SWSEi3hmSFLJQxkf9DajOKTVRIBge2MHf55Pm1TtJp3rcOeduC306aE+0j6Kltwq3TSkCgYEAhKAWwdCpIAAoODmrbk/rWDVErh7XJxapTo/tDfD2CctOgG684Fn/9ATXkerWq5Va2QNIRLst1qINkN9qeSfEEK9MYaNsDYFGFOWq9uZUdoqE4UnmAmbW+w7vMOl347W3gvfpmQh/YJv155S0UFcxTEL3TqLrsVFHufpWfRJYFz0CgYA83zB73RInGT03Qa3RtpTzJGnbQd4mmmCWZV9OLzvu2KRmH2AIb4dc7OocSptK5u55eS+n+sE4/oqKeitZ2CKyzoi9UODFfMgJ1h/42ronOkrtbwr4wnP6pI3TWbuV4raqNLu583NZEjpgxWE8M7LHCUR/d7BOixXyI8qhSw5kQQKBgQCM701VZuUe1BuZJenHcg0JfwUJA4GNctZHT0h2us0dWDp5j+1dzWJWICiEGaihutyMxZd14x/PXWYXW68MPFgZt/XP49HqSW918IEZNiBaOiFohIuDJiAyql3NqOu/cEvDf5y7xp+hPqZsBrbwyEDf8U9PQBTe8nVABAURPmSGpg==');
-     jo.put('fingerprint','36:a3:17:e5:79:da:32:35:b5:c9:d4:b5:08:cc:88:1f');
+     jo.put('user_ocid','**********');
+     jo.put('tenancy_ocid','**********');
+     jo.put('compartment_ocid','**********');
+     jo.put('private_key','**********);
+     jo.put('fingerprint','**********');
      dbms_vector.create_credential(
          credential_name   => 'OCI_CRED',
          params            => json(jo.to_string)
@@ -70,7 +70,7 @@ FROM
     (select * from dbms_vector_chain.utl_to_chunks(
         dbms_vector_chain.utl_to_text(
             to_blob(
-                DBMS_CLOUD.GET_OBJECT('OCI_CRED_BUCKET', 'https://objectstorage.eu-frankfurt-1.oraclecloud.com/p/vXQY3Pa31h3Uys7-2hqLa1y_D4gX9mE4FpGWdawAtatjQmFaZUCs6Djh83gQquyW/n/intoraclerohit/b/GenAI-Agents/o/faq.txt')
+                DBMS_CLOUD.GET_OBJECT('OCI_CRED_BUCKET', 'https://objectstorage.eu-frankfurt-1.oraclecloud.com/p/**********')
             )
         ), json('{"max":"200", "normalize":"all", "overlap":"20"}')
         )
