@@ -19,7 +19,7 @@ echo "===== Starting Cloud-Init Script ====="
 echo "Expanding boot volume..."
 sudo /usr/libexec/oci-growfs -y
 
-# Enable ol8_addons and install necessary development tools
+# Enable ol9_addons and install necessary development tools
 echo "Installing required packages..."
 sudo dnf config-manager --set-enabled ol9_addons
 sudo dnf install -y podman git libffi-devel bzip2-devel ncurses-devel readline-devel wget make gcc zlib-devel openssl-devel
