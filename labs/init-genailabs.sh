@@ -21,7 +21,7 @@ sudo /usr/libexec/oci-growfs -y
 
 # Enable ol8_addons and install necessary development tools
 echo "Installing required packages..."
-sudo dnf config-manager --set-enabled ol8_addons
+sudo dnf config-manager --set-enabled ol9_addons
 sudo dnf install -y podman git libffi-devel bzip2-devel ncurses-devel readline-devel wget make gcc zlib-devel openssl-devel
 
 # Install the latest SQLite from source
@@ -69,50 +69,41 @@ sudo podman run -d \
 
 # Wait for Oracle Container to start
 echo "Waiting for Oracle container to initialize..."
-sleep 10
+sleep 20
 
-# Check if the listener is up and if the freepdb1 service is registered
-echo "Checking if service freepdb1 is registered with the listener..."
-while ! sudo podman exec 23ai bash -c "lsnrctl status | grep -q freepdb1"; do
-  echo "Waiting for freepdb1 service to be registered with the listener..."
-  sleep 30
-done
-echo "freepdb1 service is registered with the listener."
-
-# Retry loop for Oracle login with error detection
-MAX_RETRIES=5
-RETRY_COUNT=0
-DELAY=10
-
-while true; do
-  OUTPUT=$(sudo podman exec 23ai bash -c "sqlplus -S sys/database123@localhost:1521/freepdb1 as sysdba <<EOF
-EXIT;
-EOF")
-
-  if [[ "$OUTPUT" == *"ORA-01017"* || "$OUTPUT" == *"ORA-01005"* ]]; then
-    RETRY_COUNT=$((RETRY_COUNT + 1))
-    echo "Attempt $RETRY_COUNT: Oracle credential error. Retrying in $DELAY seconds..."
-  elif [[ "$OUTPUT" == *"ORA-"* ]]; then
-    RETRY_COUNT=$((RETRY_COUNT + 1))
-    echo "Attempt $RETRY_COUNT: Oracle connection error. Retrying in $DELAY seconds..."
-  else
-    echo "Oracle Database is available."
+# --- Wait for CDB root (FREE) ---
+# Checking if FREE (CDB root) is registered
+echo "$(date '+%Y-%m-%d %H:%M:%S') Checking if FREE (CDB root) is registered..."
+MAX_RETRIES=20
+for i in $(seq 1 $MAX_RETRIES); do
+  if sudo podman exec 23ai lsnrctl status | grep -q "FREE "; then
+    echo "$(date '+%Y-%m-%d %H:%M:%S') FREE service is registered with the listener."
     break
   fi
-
-  if [ "$RETRY_COUNT" -ge "$MAX_RETRIES" ]; then
-    echo "Max retries reached. Unable to connect to Oracle Database."
-    echo "Error output: $OUTPUT"
-    exit 1
-  fi
-
-  sleep $DELAY
+  echo "$(date '+%Y-%m-%d %H:%M:%S') [$i/$MAX_RETRIES] Waiting for FREE service..."
+  sleep 10
 done
+
+if ! sudo podman exec 23ai lsnrctl status | grep -q "FREEPDB1"; then
+  echo "$(date '+%Y-%m-%d %H:%M:%S') FREEPDB1 not registered after $MAX_RETRIES attempts. Forcing it open..."
+  sudo podman exec 23ai bash -lc "echo exit | sqlplus -S / as sysdba <<EOF
+  ALTER SYSTEM SET LOCAL_LISTENER = '(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))' scope=both;
+  ALTER SYSTEM REGISTER;
+  ALTER PLUGGABLE DATABASE ALL OPEN;
+  ALTER PLUGGABLE DATABASE ALL SAVE STATE;
+  EXIT;
+EOF"
+  echo "$(date '+%Y-%m-%d %H:%M:%S') Forced FREEPDB1 open and saved state. Continuing setup..."
+fi
+
 
 # Run the SQL commands to configure the PDB
 echo "Configuring Oracle database in PDB (freepdb1)..."
 sudo podman exec -i 23ai bash <<EOF
-sqlplus -S sys/database123@localhost:1521/freepdb1 as sysdba <<EOSQL
+sqlplus -S / as sysdba <<EOSQL
+-- ensure PDB is open and switch context
+-- ALTER PLUGGABLE DATABASE FREEPDB1 OPEN IF NOT EXISTS;
+ALTER SESSION SET CONTAINER=FREEPDB1;
 CREATE BIGFILE TABLESPACE tbs2 DATAFILE 'bigtbs_f2.dbf' SIZE 1G AUTOEXTEND ON NEXT 32M MAXSIZE UNLIMITED EXTENT MANAGEMENT LOCAL SEGMENT SPACE MANAGEMENT AUTO;
 CREATE UNDO TABLESPACE undots2 DATAFILE 'undotbs_2a.dbf' SIZE 1G AUTOEXTEND ON RETENTION GUARANTEE;
 CREATE TEMPORARY TABLESPACE temp_demo TEMPFILE 'temp02.dbf' SIZE 1G REUSE AUTOEXTEND ON NEXT 32M MAXSIZE UNLIMITED EXTENT MANAGEMENT LOCAL UNIFORM SIZE 1M;
@@ -130,9 +121,16 @@ CREATE PFILE FROM SPFILE;
 ALTER SYSTEM SET vector_memory_size = 512M SCOPE=SPFILE;
 SHUTDOWN IMMEDIATE;
 STARTUP;
+-- Re-open PDBs after restart and save state again
+ALTER PLUGGABLE DATABASE ALL OPEN;
+ALTER PLUGGABLE DATABASE ALL SAVE STATE;
+ALTER SYSTEM REGISTER;
 EXIT;
 EOSQL
 EOF
+
+echo "Final listener check:"
+podman exec -i 23ai bash -lc "lsnrctl services"
 
 # Wait for Oracle to restart and apply memory changes
 sleep 10
