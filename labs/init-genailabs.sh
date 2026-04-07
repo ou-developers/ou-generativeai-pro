@@ -62,14 +62,24 @@ sudo chmod -R 755 /home/opc/oradata
 DB_CONTAINER="26ai"
 echo "Oracle DB container name: $DB_CONTAINER"
 
+# Generate a random Oracle DB password instead of using a hardcoded one
+ORACLE_PWD=$(openssl rand -hex 16)
+echo "Generated random Oracle DB password."
+
 # Run the Oracle Database Free Edition container
 echo "Running Oracle Database container..."
 sudo podman run -d \
     --name "$DB_CONTAINER" \
     --network=host \
-    -e ORACLE_PWD=database123 \
+    -e ORACLE_PWD="$ORACLE_PWD" \
     -v /home/opc/oradata:/opt/oracle/oradata:z \
     container-registry.oracle.com/database/free:latest
+
+# Save DB password for the student (readable only by opc)
+echo "$ORACLE_PWD" > /home/opc/db_password.txt
+chown opc:opc /home/opc/db_password.txt
+chmod 600 /home/opc/db_password.txt
+echo "Oracle DB password saved to /home/opc/db_password.txt"
 
 # Wait for Oracle Container to start
 echo "Waiting for Oracle container to initialize..."
@@ -90,13 +100,15 @@ done
 
 if ! sudo podman exec "$DB_CONTAINER" lsnrctl status | grep -q "FREEPDB1"; then
   echo "$(date '+%Y-%m-%d %H:%M:%S') FREEPDB1 not registered after $MAX_RETRIES attempts. Forcing it open..."
-  sudo podman exec "$DB_CONTAINER" bash -lc "echo exit | sqlplus -S / as sysdba <<EOF
-  ALTER SYSTEM SET LOCAL_LISTENER = '(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))' scope=both;
-  ALTER SYSTEM REGISTER;
-  ALTER PLUGGABLE DATABASE ALL OPEN;
-  ALTER PLUGGABLE DATABASE ALL SAVE STATE;
-  EXIT;
-EOF"
+  sudo podman exec "$DB_CONTAINER" bash <<EOF
+sqlplus -S / as sysdba << EOSQL
+ALTER SYSTEM SET LOCAL_LISTENER = '(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))' scope=both;
+ALTER SYSTEM REGISTER;
+ALTER PLUGGABLE DATABASE ALL OPEN;
+ALTER PLUGGABLE DATABASE ALL SAVE STATE;
+EXIT;
+EOSQL
+EOF
   echo "$(date '+%Y-%m-%d %H:%M:%S') Forced FREEPDB1 open and saved state. Continuing setup..."
 fi
 
@@ -141,6 +153,20 @@ sleep 10
 
 echo "Skipping vector_memory_size check. Assuming it is set to 512M based on startup logs."
 
+# ============================================================
+# SECURITY HARDENING: Lock down OS-level firewall
+# Only SSH (port 22) is allowed publicly.
+# Jupyter (8888), Streamlit (8501), and Oracle DB (1521)
+# are bound to localhost and accessed via SSH tunnel only.
+# ============================================================
+echo "Hardening OS firewall, allowing only SSH (port 22) publicly..."
+sudo firewall-cmd --permanent --zone=public --add-port=22/tcp
+sudo firewall-cmd --permanent --zone=public --remove-port=8888/tcp 2>/dev/null
+sudo firewall-cmd --permanent --zone=public --remove-port=8501/tcp 2>/dev/null
+sudo firewall-cmd --permanent --zone=public --remove-port=1521/tcp 2>/dev/null
+sudo firewall-cmd --reload
+echo "Firewall hardened. Only port 22 is open."
+
 # Now switch to opc for user-specific tasks
 sudo -u opc -i bash <<'EOF_OPC'
 
@@ -161,7 +187,7 @@ EOF
 # Ensure .bashrc is sourced on login
 cat << EOF >> $HOME/.bash_profile
 if [ -f ~/.bashrc ]; then
-   source ~/.bashrc ]
+   source ~/.bashrc
 fi
 EOF
 
@@ -199,6 +225,47 @@ python -c "from sentence_transformers import SentenceTransformer; SentenceTransf
 
 # Install JupyterLab
 pip install --user jupyterlab
+
+# ============================================================
+# SECURITY HARDENING: Configure JupyterLab
+# - Bind to 127.0.0.1 only (not accessible from public internet)
+# - Require token authentication
+# - Students access via SSH tunnel:
+#   ssh -i <key> -L 8888:localhost:8888 opc@<public-ip>
+#   then open http://localhost:8888?token=<token> in browser
+# ============================================================
+echo "Configuring JupyterLab with token authentication (localhost only)..."
+JUPYTER_TOKEN=$(openssl rand -hex 24)
+mkdir -p $HOME/.jupyter
+cat > $HOME/.jupyter/jupyter_lab_config.py <<JCFG
+c.ServerApp.ip = '127.0.0.1'
+c.ServerApp.port = 8888
+c.ServerApp.open_browser = False
+c.ServerApp.token = '${JUPYTER_TOKEN}'
+c.ServerApp.allow_remote_access = False
+JCFG
+
+# Save the token for the student to retrieve once SSH into
+echo "============================================" > $HOME/jupyter_access.txt
+echo "JupyterLab Access Instructions" >> $HOME/jupyter_access.txt
+echo "============================================" >> $HOME/jupyter_access.txt
+echo "" >> $HOME/jupyter_access.txt
+echo "1. From your LOCAL machine, open a terminal and run:" >> $HOME/jupyter_access.txt
+echo "   ssh -i <private_key> -L 8888:localhost:8888 -L 8501:localhost:8501 opc@<public-ip>" >> $HOME/jupyter_access.txt
+echo "" >> $HOME/jupyter_access.txt
+echo "2. Then open this URL in your browser:" >> $HOME/jupyter_access.txt
+echo "   http://localhost:8888?token=${JUPYTER_TOKEN}" >> $HOME/jupyter_access.txt
+echo "3. Then open this Streamlit URL in your browser, when on last lab:" >> $HOME/jupyter_access.txt
+echo "   http://127.0.0.1:8501" >> $HOME/jupyter_access.txt
+echo "" >> $HOME/jupyter_access.txt
+echo "Your Jupyter token: ${JUPYTER_TOKEN}" >> $HOME/jupyter_access.txt
+echo "============================================" >> $HOME/jupyter_access.txt
+chmod 600 $HOME/jupyter_access.txt
+echo "Jupyter token saved to ~/jupyter_access.txt"
+
+# Save DB password reference too
+echo "" >> $HOME/jupyter_access.txt
+echo "Oracle DB password: $(cat $HOME/db_password.txt 2>/dev/null || echo 'see /home/opc/db_password.txt')" >> $HOME/jupyter_access.txt
 
 # Install OCI CLI
 echo "Installing OCI CLI..."
