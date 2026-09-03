@@ -1,0 +1,19 @@
+# Local secrets and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p8
+*.p12
+*.crt
+*.cer
+
+# Local Python/build artifacts
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Generated lab outputs
+oci_daily_cost*.csv
